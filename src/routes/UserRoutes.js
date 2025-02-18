@@ -209,5 +209,26 @@ router.get('/get-search-profile-pics', async (req, res) => {
 });
 
 
+router.post('/logout', authenticateToken, async(req, res) => {
+    try {
+        const bearerToken = req.headers.authorization;
+        if (!bearerToken || !bearerToken.startsWith('Bearer ')) {
+            return res.status(401).json({ success: false, message: "No token provided or invalid format" });
+        }
+        const token = bearerToken.substring(7);
+
+        const result = await authService.logout(token);
+        if (result) {
+            res.status(200).json({ success: true, message: "User logged out successfully" });
+        } else {
+            res.status(401).json({ success: false, message: "Logout failed" });
+        }
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
+
 
 export default router;

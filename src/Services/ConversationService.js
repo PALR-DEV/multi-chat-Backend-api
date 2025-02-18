@@ -2,8 +2,8 @@ import { query } from '../config/postgres-config.js';
 
 
 class ConversationService {
-    
-    async createConversation( name = null) {
+
+    async createConversation(name = null) {
         const result = await query('INSERT INTO Conversations (type, name) VALUES ($1, $2) RETURNING *', ['one-to-one', name]);
         return result.rows[0];
     }
@@ -33,7 +33,7 @@ class ConversationService {
             )
             GROUP BY c.id
         `, [userId]);
-        
+
         return result.rows;
     }
 
@@ -56,7 +56,7 @@ class ConversationService {
 
             // If no conversation exists, create a new one
             const newConversation = await this.createConversation();
-            
+
             // Add both users to the conversation
             await this.addUserToConversation(newConversation.id, userId1);
             await this.addUserToConversation(newConversation.id, userId2);
@@ -74,6 +74,8 @@ class ConversationService {
                 u.username,
                 u.firstname,
                 u.lastname,
+                u.status,
+                u.last_seen,
                 cp.joinedat
             FROM 
                 ConversationParticipants cp
@@ -82,7 +84,7 @@ class ConversationService {
             WHERE 
                 cp.conversationId = $1
         `, [conversationId]);
-    
+
         return result.rows;
     }
 
@@ -90,11 +92,40 @@ class ConversationService {
         const result = await query(`
             SELECT id, username, profile_picture 
             FROM Users 
-            WHERE username LIKE '%' || $1 || '%'
+            WHERE LOWER(username) LIKE LOWER('%' || $1 || '%')
         `, [searchTerm]);
         return result.rows;
     }
+
+
+    async updateUserStatus(userId, status) {
+        try {
+            const result = await db.query(
+                'UPDATE users SET status = $1, last_seen = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *',
+                [status, userId]
+            );
+            return result.rows[0];
+
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async getUserStatus(userId) {
+        try {
+            const result = await query(
+                'SELECT status, last_seen FROM Users WHERE id = $1',
+                [userId]
+            );
+            return result.rows[0];
+
+        } catch (error) {
+            throw error;
+        }
+    }
 }
+
+
 const conversationService = new ConversationService();
 export default conversationService;
 

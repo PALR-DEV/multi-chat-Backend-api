@@ -142,5 +142,44 @@ router.post('/search-user', authenticateToken, async(req,res) => {
     }
 })
 
+
+router.put('/update-status', authenticateToken, async (req,res) => {
+    try {
+        const userID = req.user.id;
+        const {status} = req.body; // can be online or offline
+
+        const result = await conversationService.updateUserStatus(userID, status);
+        
+    } catch (error) {
+        
+    }
+})
+
+
+router.get('/get-user-status/:userID', authenticateToken, async(req,res) => {
+    try {
+        const userID = req.params.userID;
+        const result = await conversationService.getUserStatus(userID);
+
+        if(!result) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found",
+                data: null
+            })
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "User status retrieved successfully",
+            data: result
+        })
+        
+    } catch (error) {
+        throw error;
+        
+    }
+})
+
 export default router;
 

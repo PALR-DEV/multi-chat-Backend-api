@@ -26,6 +26,11 @@ class AuthService {
                 if (!isValid) {
                     return null;
                 }
+                // Update user status to online
+                await query(
+                    'UPDATE Users SET status = $1, last_seen = CURRENT_TIMESTAMP WHERE id = $2',
+                    ['online', user.id]
+                );
                 
                 const token = generateToken(user);
                 return {token , user };
@@ -69,6 +74,23 @@ class AuthService {
             
             const result = await query('SELECT * FROM Users WHERE id = $1', [decoded.id]);
             return result.rows[0];
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async logout(token) {
+        try {
+            const decoded = verifyToken(token);
+            if (!decoded) {
+                return false;
+            }
+
+            await query(
+                'UPDATE Users SET status = $1, last_seen = CURRENT_TIMESTAMP WHERE id = $2',
+                ['offline', decoded.id]
+            );
+            return true;
         } catch (error) {
             throw error;
         }
