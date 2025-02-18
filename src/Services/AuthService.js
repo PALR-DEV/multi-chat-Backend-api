@@ -28,7 +28,7 @@ class AuthService {
                 }
                 
                 const token = generateToken(user);
-                return { user, token };
+                return {token , user };
             } catch (error) {
                 console.error('Error during password comparison:', error);
                 return null;
